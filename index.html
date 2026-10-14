@@ -1,11 +1,468 @@
-<!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Giỏ hàng | Beyond Bloom</title><style>
-:root{--pink:#df888c;--green:#285a48;--cream:#fffaf7}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#263b32;font-family:system-ui,-apple-system,Arial,sans-serif}header{background:#fff;padding:20px 16px;text-align:center;border-bottom:1px solid #f1e2de}header h1{font-family:Georgia,serif;font-size:32px;color:var(--green);margin:0}header p{margin:7px 0;color:#a66c72}main{max-width:780px;margin:24px auto;padding:0 15px}h2{font-size:22px;color:var(--green)}.card{background:white;border:1px solid #f2e7e3;border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 5px 20px #4c28230b}.product{display:flex;align-items:center;gap:12px}.flower{width:70px;height:70px;background:#fff1ee;border-radius:15px;display:grid;place-items:center;font-size:37px;flex-shrink:0}.info{flex:1}.info strong{display:block;color:var(--green)}.price{color:#ce737b;margin-top:4px}.controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-size:15px}button.primary{background:var(--pink);color:white;font-weight:650}button.outline{background:#fff0f0;color:#9a4654}button.qty{background:#f8eeee;min-width:38px}.qtynum{min-width:22px;text-align:center}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--green);outline-offset:2px}.summary{position:sticky;bottom:0;background:#fff;border-top:2px solid #f4dada;padding:16px;box-shadow:0 -4px 18px #0000000b;border-radius:14px 14px 0 0}.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.total{font-size:21px;color:#b85865;font-weight:800}.small{color:#66746e;font-size:13px}label{display:block;font-weight:600;margin:13px 0 6px}input,textarea{width:100%;border:1px solid #d9d9d9;border-radius:9px;padding:12px;font:inherit;background:#fff}textarea{min-height:75px}#checkout{display:none}#notice{display:none;background:#e9f7ed;padding:15px;border-radius:12px;white-space:pre-wrap;margin-top:16px}footer{text-align:center;padding:26px;color:#66746e;font-size:13px}.empty{color:#687a72;font-style:italic}.actions{display:flex;justify-content:flex-end;margin-top:10px}a{color:var(--green)}
-</style></head><body><header><h1>Beyond Bloom 🌷</h1><p>Giỏ hàng hoa DIY • Bloom Your Way</p></header><main><h2>🌸 Chọn combo hoa</h2><div id="catalog"></div><h2>🛒 Giỏ hàng của bạn <span id="count">(0)</span></h2><div id="cart"></div><section id="checkout" class="card"><h2>📝 Thông tin đặt hoa</h2><form id="orderForm"><label for="name">Họ và tên *</label><input id="name" required autocomplete="name"><label for="phone">Số điện thoại *</label><input id="phone" type="tel" required pattern="[0-9+(). -]{9,16}" autocomplete="tel"><label for="address">Địa chỉ giao hoa *</label><textarea id="address" required autocomplete="street-address"></textarea><label for="date">Ngày nhận hoa *</label><input id="date" type="date" required><label for="message">Lời nhắn cho người nhận</label><textarea id="message"></textarea><label for="note">Ghi chú thêm</label><textarea id="note"></textarea><p class="small">Đây là trang đặt hàng mô phỏng phục vụ bài tập. Thông tin không được gửi tới cửa hàng hay máy chủ.</p><button class="primary" type="submit">Xác nhận đơn hàng mô phỏng</button></form><div id="notice" role="status"></div></section><div class="summary"><div class="row"><span>Tổng cộng (<span id="items">0</span> sản phẩm)</span><span id="total" class="total">0 ₫</span></div><div class="actions"><button class="primary" id="checkoutBtn" disabled>Tiến hành đặt hoa</button></div></div></main><footer>Beyond Bloom · Trang giỏ hàng mô phỏng dành cho học tập</footer><script>
-const products=[{id:'sunshine',name:'Sunshine DIY',price:159000,emoji:'🌻'},{id:'rose',name:'Rose DIY',price:259000,emoji:'🌹'},{id:'hydrangea',name:'Hydrangea DIY',price:359000,emoji:'💐'}];
-const key='beyondBloomCartV1';let cart={};try{const v=JSON.parse(localStorage.getItem(key)||'{}');if(v&&typeof v==='object'&&!Array.isArray(v))for(const p of products){const n=Number(v[p.id]);if(Number.isInteger(n)&&n>0)cart[p.id]=Math.min(n,99)}}catch(e){}
-const money=n=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function persist(){try{localStorage.setItem(key,JSON.stringify(cart))}catch(e){}}
-function add(id){cart[id]=Math.min(99,(cart[id]||0)+1);persist();render()};function change(id,d){const n=(cart[id]||0)+d;if(n<=0)delete cart[id];else cart[id]=Math.min(n,99);persist();render()};function remove(id){delete cart[id];persist();render()}
-function render(){document.getElementById('catalog').innerHTML=products.map(p=>`<div class="card product"><div class="flower">${p.emoji}</div><div class="info"><strong>${p.name}</strong><div class="price">${money(p.price)}</div><div class="actions"><button class="primary" data-add="${p.id}">+ Thêm vào giỏ hàng</button></div></div></div>`).join('');const selected=products.filter(p=>cart[p.id]);document.getElementById('cart').innerHTML=selected.length?selected.map(p=>`<div class="card"><div class="product"><div class="flower">${p.emoji}</div><div class="info"><strong>${p.name}</strong><div class="price">${money(p.price)} × ${cart[p.id]} = ${money(p.price*cart[p.id])}</div></div></div><div class="controls"><button class="outline" data-remove="${p.id}">🗑 Xóa</button><button class="qty" data-dec="${p.id}" aria-label="Giảm ${p.name}">−</button><span class="qtynum">${cart[p.id]}</span><button class="qty" data-inc="${p.id}" aria-label="Tăng ${p.name}">+</button></div></div>`).join(''):'<p class="empty">Giỏ hàng đang trống. Hãy chọn một combo hoa ở trên nhé!</p>';const count=selected.reduce((a,p)=>a+cart[p.id],0);const total=selected.reduce((a,p)=>a+cart[p.id]*p.price,0);document.getElementById('count').textContent=`(${count})`;document.getElementById('items').textContent=count;document.getElementById('total').textContent=money(total);document.getElementById('checkoutBtn').disabled=!count;if(!count)document.getElementById('checkout').style.display='none'}
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.add)add(b.dataset.add);if(b.dataset.inc)change(b.dataset.inc,1);if(b.dataset.dec)change(b.dataset.dec,-1);if(b.dataset.remove)remove(b.dataset.remove)});document.getElementById('checkoutBtn').addEventListener('click',()=>{document.getElementById('checkout').style.display='block';document.getElementById('checkout').scrollIntoView({behavior:'smooth'});});document.getElementById('date').min=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);document.getElementById('orderForm').addEventListener('submit',e=>{e.preventDefault();const selected=products.filter(p=>cart[p.id]);if(!selected.length)return;const total=selected.reduce((a,p)=>a+cart[p.id]*p.price,0);const summary=`ĐƠN HÀNG MÔ PHỎNG – BEYOND BLOOM\n\n${selected.map(p=>`${p.name} × ${cart[p.id]}: ${money(p.price*cart[p.id])}`).join('\n')}\nTỔNG: ${money(total)}\n\nNgười nhận: ${document.getElementById('name').value}\nĐiện thoại: ${document.getElementById('phone').value}\nĐịa chỉ: ${document.getElementById('address').value}\nNgày nhận: ${document.getElementById('date').value}\nLời nhắn: ${document.getElementById('message').value}\nGhi chú: ${document.getElementById('note').value}`;const notice=document.getElementById('notice');notice.textContent='✅ Đã tạo đơn hàng mô phỏng!\n\n'+summary+'\n\nLưu ý: Đơn chưa được gửi qua email hoặc lưu trên máy chủ.';notice.style.display='block';notice.scrollIntoView({behavior:'smooth'});});const params=new URLSearchParams(location.search);const p=params.get('add');if(products.some(x=>x.id===p)){add(p);history.replaceState(null,'',location.pathname+location.hash)}else render();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giỏ hàng | Beyond Bloom</title>
+
+<style>
+:root {
+  --pink: #df888c;
+  --green: #285a48;
+  --cream: #fffaf7;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: #263b32;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background: white;
+  text-align: center;
+  padding: 25px 15px;
+}
+
+header h1 {
+  color: var(--green);
+  font-family: Georgia, serif;
+  font-size: 32px;
+  margin: 0;
+}
+
+header p { color: #b87780; }
+
+main {
+  max-width: 750px;
+  margin: auto;
+  padding: 20px 15px;
+}
+
+h2 { color: var(--green); }
+
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 18px;
+  margin: 15px 0;
+  border: 1px solid #f2e7e3;
+}
+
+.product {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.product img {
+  width: 100px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.info { flex: 1; }
+
+.info strong {
+  color: var(--green);
+  font-size: 18px;
+}
+
+.price {
+  color: #ce737b;
+  margin-top: 8px;
+}
+
+button, .btn {
+  border: none;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.primary {
+  background: var(--pink);
+  color: white;
+  font-weight: bold;
+}
+
+.secondary {
+  background: #e9f2ed;
+  color: var(--green);
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.controls button { background: #f8eeee; }
+
+.total {
+  color: #b85865;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.summary {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  margin-top: 20px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font: inherit;
+}
+
+textarea { min-height: 75px; }
+
+label {
+  font-weight: bold;
+  display: block;
+}
+
+#checkout { display: none; }
+
+#notice {
+  display: none;
+  background: #e9f7ed;
+  padding: 15px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.empty {
+  text-align: center;
+  padding: 30px 10px;
+  color: #687a72;
+}
+
+footer {
+  text-align: center;
+  padding: 30px;
+  color: #66746e;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Beyond Bloom 🌷</h1>
+  <p>Giỏ hàng hoa tươi • Bloom Your Way</p>
+</header>
+
+<main>
+
+<h2>🛒 Giỏ hàng của bạn <span id="count">(0)</span></h2>
+
+<div id="cart"></div>
+
+<div class="actions">
+  <a class="btn secondary"
+     href="https://beyondbloom7.wordpress.com/san-pham-dich-vu/">
+    ← Tiếp tục mua hoa
+  </a>
+</div>
+
+<div class="summary">
+  <div class="row">
+    <span>Tổng cộng</span>
+    <span id="total" class="total">0 ₫</span>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="checkoutBtn">
+      Tiến hành đặt hoa
+    </button>
+  </div>
+</div>
+
+<section id="checkout" class="card">
+
+<h2>📝 Thông tin đặt hoa</h2>
+
+<form id="orderForm">
+
+<label>Họ và tên *</label>
+<input id="name" required autocomplete="name">
+
+<label>Số điện thoại *</label>
+<input id="phone" type="tel" required
+pattern="[0-9+(). -]{9,16}" autocomplete="tel">
+
+<label>Địa chỉ giao hoa *</label>
+<textarea id="address" required></textarea>
+
+<label>Ngày nhận hoa *</label>
+<input id="date" type="date" required>
+
+<label>Lời nhắn cho người nhận</label>
+<textarea id="message"></textarea>
+
+<label>Ghi chú thêm</label>
+<textarea id="note"></textarea>
+
+<p style="font-size:13px;color:#777">
+Đây là trang đặt hàng mô phỏng.
+Thông tin chưa được gửi về cửa hàng.
+</p>
+
+<button class="primary" type="submit">
+Xác nhận đơn hàng
+</button>
+
+</form>
+
+<div id="notice" role="status"></div>
+
+</section>
+
+</main>
+
+<footer>
+Beyond Bloom 🌷 Gói thương thành hoa
+</footer>
+
+<script>
+
+const products = [
+  {
+    id: "sunshine",
+    name: "Sunshine DIY",
+    price: 159000,
+    image: "sunshine.jpg"
+  },
+  {
+    id: "rose",
+    name: "Rose DIY",
+    price: 259000,
+    image: "rose.jpg"
+  },
+  {
+    id: "hydrangea",
+    name: "Hydrangea DIY",
+    price: 359000,
+    image: "hydrangea.jpg"
+  }
+];
+
+const key = "beyondBloomCartV1";
+let cart = {};
+
+try {
+  const saved = JSON.parse(localStorage.getItem(key) || "{}");
+  if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+    for (const product of products) {
+      const qty = Number(saved[product.id]);
+      if (Number.isInteger(qty) && qty > 0) {
+        cart[product.id] = Math.min(qty, 99);
+      }
+    }
+  }
+} catch (e) {}
+
+function save() {
+  localStorage.setItem(key, JSON.stringify(cart));
+}
+
+function money(n) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND"
+  }).format(n);
+}
+
+function add(id) {
+  cart[id] = Math.min(99, (cart[id] || 0) + 1);
+  save();
+  render();
+}
+
+function change(id, amount) {
+  const qty = (cart[id] || 0) + amount;
+
+  if (qty <= 0) {
+    delete cart[id];
+  } else {
+    cart[id] = Math.min(qty, 99);
+  }
+
+  save();
+  render();
+}
+
+function removeItem(id) {
+  delete cart[id];
+  save();
+  render();
+}
+
+function render() {
+  const selected = products.filter(p => cart[p.id]);
+
+  document.getElementById("cart").innerHTML =
+    selected.length
+      ? selected.map(p => `
+        <div class="card">
+          <div class="product">
+            <img src="${p.image}" alt="${p.name}">
+            <div class="info">
+              <strong>${p.name}</strong>
+              <div class="price">
+                ${money(p.price)} × ${cart[p.id]}
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button data-remove="${p.id}">🗑 Xóa</button>
+            <button data-dec="${p.id}">−</button>
+            <span>${cart[p.id]}</span>
+            <button data-inc="${p.id}">+</button>
+          </div>
+        </div>
+      `).join("")
+      : `<div class="card empty">
+          Giỏ hàng đang trống 🌷<br><br>
+          Hãy quay lại trang sản phẩm để chọn hoa nhé!
+         </div>`;
+
+  const count = selected.reduce(
+    (sum, p) => sum + cart[p.id], 0
+  );
+
+  const total = selected.reduce(
+    (sum, p) => sum + p.price * cart[p.id], 0
+  );
+
+  document.getElementById("count").textContent =
+    `(${count})`;
+
+  document.getElementById("total").textContent =
+    money(total);
+
+  document.getElementById("checkoutBtn").disabled =
+    count === 0;
+
+  if (count === 0) {
+    document.getElementById("checkout").style.display = "none";
+  }
+}
+
+document.addEventListener("click", function(e) {
+  const button = e.target.closest("button");
+  if (!button) return;
+
+  if (button.dataset.inc) {
+    change(button.dataset.inc, 1);
+  }
+
+  if (button.dataset.dec) {
+    change(button.dataset.dec, -1);
+  }
+
+  if (button.dataset.remove) {
+    removeItem(button.dataset.remove);
+  }
+});
+
+document.getElementById("checkoutBtn")
+  .addEventListener("click", function() {
+    document.getElementById("checkout").style.display = "block";
+    document.getElementById("checkout")
+      .scrollIntoView({ behavior: "smooth" });
+  });
+
+const today = new Date();
+today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+document.getElementById("date").min =
+  today.toISOString().slice(0, 10);
+
+document.getElementById("orderForm")
+  .addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const selected = products.filter(p => cart[p.id]);
+    if (!selected.length) return;
+
+    const total = selected.reduce(
+      (sum, p) => sum + p.price * cart[p.id], 0
+    );
+
+    const summary = [
+      "ĐƠN HÀNG BEYOND BLOOM",
+      "",
+      ...selected.map(p =>
+        `${p.name} × ${cart[p.id]}: ${money(p.price * cart[p.id])}`
+      ),
+      "",
+      `Tổng tiền: ${money(total)}`,
+      `Họ tên: ${document.getElementById("name").value}`,
+      `SĐT: ${document.getElementById("phone").value}`,
+      `Địa chỉ: ${document.getElementById("address").value}`,
+      `Ngày nhận: ${document.getElementById("date").value}`,
+      `Lời nhắn: ${document.getElementById("message").value}`,
+      `Ghi chú: ${document.getElementById("note").value}`
+    ].join("\n");
+
+    const notice = document.getElementById("notice");
+    notice.textContent =
+      "✅ Đã tạo đơn hàng mô phỏng!\n\n" +
+      summary +
+      "\n\nĐơn hàng chưa được gửi đến cửa hàng.";
+
+    notice.style.display = "block";
+    notice.scrollIntoView({ behavior: "smooth" });
+  });
+
+const params = new URLSearchParams(window.location.search);
+const productId = params.get("add");
+
+if (products.some(p => p.id === productId)) {
+  add(productId);
+  history.replaceState(
+    null,
+    "",
+    window.location.pathname
+  );
+} else {
+  render();
+}
+
+</script>
+
+</body>
+</html>
