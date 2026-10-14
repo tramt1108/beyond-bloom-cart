@@ -521,12 +521,38 @@ Ghi chú: ${document.getElementById("note").value}
 
   const notice = document.getElementById("notice");
 
-  notice.textContent =
-  "✅ Đã tạo đơn hàng mô phỏng!\n" +
-  summary +
-  "\nLưu ý: Đơn hàng chưa được gửi đến cửa hàng.";
+  notice.textContent = "⏳ Đang gửi đơn hàng...";
+notice.style.display = "block";
 
-  notice.style.display = "block";
+try {
+  const response = await fetch(
+    "https://formsubmit.co/ajax/tramt1108@gmail.com",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        _subject: "Đơn đặt hoa mới - Beyond Bloom",
+        "Thông tin đơn hàng": summary
+      })
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok || (result.success !== "true" && result.success !== true)) {
+    throw new Error("Không gửi được đơn hàng");
+  }
+
+notice.textContent =
+  "✅ Đã gửi đơn hàng! Beyond Bloom sẽ liên hệ xác nhận.";
+} catch (error) {
+  notice.textContent =
+    "❌ Chưa gửi được đơn hàng. Vui lòng thử lại.";
+}
+  
 
   notice.scrollIntoView({
     behavior: "smooth"
