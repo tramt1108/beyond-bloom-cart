@@ -243,10 +243,6 @@ pattern="[0-9+(). -]{9,16}">
 <label for="note">Ghi chú thêm</label>
 <textarea id="note"></textarea>
 
-<p style="font-size:13px;color:#66746e">
-Đây là trang đặt hàng mô phỏng phục vụ bài tập.
-Thông tin chưa được gửi đến cửa hàng.
-</p>
 
 <button class="primary" type="submit">
 Xác nhận đơn hàng
@@ -547,7 +543,10 @@ try {
   }
 
 notice.textContent =
-  "✅ Đã gửi đơn hàng! Beyond Bloom sẽ liên hệ xác nhận.";
+  "🌷 ĐẶT HOA THÀNH CÔNG!\n\n" +
+  "Beyond Bloom đã nhận được yêu cầu đặt hoa của bạn.\n" +
+  "Chúng mình sẽ sớm liên hệ để xác nhận đơn hàng.\n\n" +
+  "💗 Cảm ơn bạn đã lựa chọn Beyond Bloom!";
 } catch (error) {
   notice.textContent =
     "❌ Chưa gửi được đơn hàng. Vui lòng thử lại.";
