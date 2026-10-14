@@ -492,7 +492,7 @@ document.getElementById("date").min =
 
 document.getElementById("orderForm").addEventListener("submit", async (event) => {
 
-  e.preventDefault();
+event.preventDefault();
 
   const selected = products.filter(p => cart[p.id]);
 
