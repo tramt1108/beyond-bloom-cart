@@ -490,7 +490,7 @@ today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
 document.getElementById("date").min =
   today.toISOString().slice(0, 10);
 
-document.getElementById("orderForm").addEventListener("submit", e => {
+document.getElementById("orderForm").addEventListener("submit", async (event) => {
 
   e.preventDefault();
 
@@ -522,9 +522,9 @@ Ghi chú: ${document.getElementById("note").value}
   const notice = document.getElementById("notice");
 
   notice.textContent =
-    "✅ Đã tạo đơn hàng mô phỏng!\n" +
-    summary +
-    "\nLưu ý: Đơn hàng chưa được gửi đến cửa hàng.";
+  "✅ Đã tạo đơn hàng mô phỏng!\n" +
+  summary +
+  "\nLưu ý: Đơn hàng chưa được gửi đến cửa hàng.";
 
   notice.style.display = "block";
 
