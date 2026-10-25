@@ -318,10 +318,10 @@ const products = [
     price: 359000,
     image: "hydrangea.jpg"
   },
-  { id: "single-sunflower", name: "Hoa hướng dương (bông)", price: 20000, emoji: "🌻" },
-  { id: "single-rose", name: "Hoa hồng (bông)", price: 14000, emoji: "🌹" },
-  { id: "single-lily", name: "Hoa ly (bông)", price: 20000, emoji: "🌸" },
-  { id: "single-hydrangea", name: "Hoa cẩm tú cầu (bông)", price: 35000, emoji: "💐" }
+  { id: "single-sunflower", name: "Hoa hướng dương", price: 20000, emoji: "🌻" },
+  { id: "single-rose", name: "Hoa hồng", price: 14000, emoji: "🌹" },
+  { id: "single-lily", name: "Hoa ly", price: 20000, emoji: "🌸" },
+  { id: "single-hydrangea", name: "Hoa cẩm tú cầu", price: 35000, emoji: "💐" }
 ];
 
 const looseFlowers = products.filter(p => p.id.startsWith("single-"));
@@ -494,6 +494,24 @@ document.addEventListener("click", e => {
   const button = e.target.closest("button");
 
   if (!button) return;
+
+  if (button.dataset.flowerInc) {
+    const id = button.dataset.flowerInc;
+    if (Object.prototype.hasOwnProperty.call(flowerQuantities, id)) {
+      flowerQuantities[id] = Math.min(99, flowerQuantities[id] + 1);
+      renderFlowerOptions();
+    }
+    return;
+  }
+
+  if (button.dataset.flowerDec) {
+    const id = button.dataset.flowerDec;
+    if (Object.prototype.hasOwnProperty.call(flowerQuantities, id)) {
+      flowerQuantities[id] = Math.max(0, flowerQuantities[id] - 1);
+      renderFlowerOptions();
+    }
+    return;
+  }
 
   if (button.dataset.inc) {
     change(button.dataset.inc, 1);
