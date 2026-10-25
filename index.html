@@ -199,6 +199,11 @@ a {
 .flower-option button { min-width: 42px; }
 .flower-add { margin-top: 15px; width: 100%; }
 @media(max-width: 520px) { .flower-grid { grid-template-columns: 1fr; } }
+.flower-head {display:flex;align-items:center;gap:12px;min-height:86px;}
+.flower-head img {width:88px;height:88px;object-fit:cover;border-radius:12px;flex-shrink:0;}
+.flower-head strong {margin-bottom:8px;}
+.flower-option .controls {margin-top:12px;}
+@media(max-width:650px){.flower-head img{width:74px;height:74px;}}
 button:disabled { opacity: .55; cursor: not-allowed; }
 
 footer {
@@ -225,10 +230,8 @@ footer {
 
 <section class="card" aria-labelledby="flowerTitle">
   <h2 id="flowerTitle">🌸 Tự chọn từng bông hoa</h2>
-  <p>Chọn loại hoa và số lượng bạn thích, sau đó nhấn <strong>Thêm hoa vào giỏ</strong>.</p>
+  <p>Nhấn <strong>+</strong> hoặc <strong>−</strong> để chọn hoa. Giỏ hàng và tổng tiền sẽ tự cập nhật.</p>
   <div id="flowerOptions" class="flower-grid"></div>
-  <button type="button" class="primary flower-add" id="addFlowersBtn">🌷 Thêm hoa vào giỏ</button>
-  <p id="flowerFeedback" role="status" aria-live="polite"></p>
 </section>
 
 <p>
@@ -318,23 +321,21 @@ const products = [
     price: 359000,
     image: "hydrangea.jpg"
   },
-  { id: "single-sunflower", name: "Hoa hướng dương", price: 20000, emoji: "🌻" },
-  { id: "single-rose", name: "Hoa hồng", price: 14000, emoji: "🌹" },
-  { id: "single-lily", name: "Hoa ly", price: 20000, emoji: "🌸" },
-  { id: "single-hydrangea", name: "Hoa cẩm tú cầu", price: 35000, emoji: "💐" }
+  { id: "single-sunflower", name: "Hoa hướng dương", price: 20000, image: "flower-sunflower.jpg?v=2" },
+  { id: "single-rose", name: "Hoa hồng", price: 14000, image: "flower-rose.jpg?v=2" },
+  { id: "single-lily", name: "Hoa ly", price: 20000, image: "flower-lily.jpg?v=2" },
+  { id: "single-hydrangea", name: "Hoa cẩm tú cầu", price: 35000, image: "flower-hydrangea.jpg?v=2" }
 ];
 
 const looseFlowers = products.filter(p => p.id.startsWith("single-"));
-const flowerQuantities = Object.fromEntries(looseFlowers.map(p => [p.id, 0]));
 
 function renderFlowerOptions() {
   document.getElementById("flowerOptions").innerHTML = looseFlowers.map(p => `
     <div class="flower-option">
-      <strong>${p.emoji} ${p.name}</strong>
-      <div class="price">${money(p.price)} / bông</div>
+      <div class="flower-head"><img src="${p.image}" alt="${p.name}" loading="lazy"><div><strong>${p.name}</strong><div class="price">${money(p.price)} / bông</div></div></div>
       <div class="controls">
         <button type="button" class="qty" data-flower-dec="${p.id}" aria-label="Giảm ${p.name}">−</button>
-        <span>${flowerQuantities[p.id]}</span>
+        <span>${cart[p.id] || 0}</span>
         <button type="button" class="qty" data-flower-inc="${p.id}" aria-label="Tăng ${p.name}">+</button>
       </div>
     </div>`).join("");
@@ -496,58 +497,32 @@ document.addEventListener("click", e => {
   if (!button) return;
 
   if (button.dataset.flowerInc) {
-    const id = button.dataset.flowerInc;
-    if (Object.prototype.hasOwnProperty.call(flowerQuantities, id)) {
-      flowerQuantities[id] = Math.min(99, flowerQuantities[id] + 1);
-      renderFlowerOptions();
-    }
+    change(button.dataset.flowerInc, 1);
+    renderFlowerOptions();
     return;
   }
 
   if (button.dataset.flowerDec) {
-    const id = button.dataset.flowerDec;
-    if (Object.prototype.hasOwnProperty.call(flowerQuantities, id)) {
-      flowerQuantities[id] = Math.max(0, flowerQuantities[id] - 1);
-      renderFlowerOptions();
-    }
+    change(button.dataset.flowerDec, -1);
+    renderFlowerOptions();
     return;
   }
 
   if (button.dataset.inc) {
     change(button.dataset.inc, 1);
+    renderFlowerOptions();
   }
 
   if (button.dataset.dec) {
     change(button.dataset.dec, -1);
+    renderFlowerOptions();
   }
 
   if (button.dataset.remove) {
     remove(button.dataset.remove);
+    renderFlowerOptions();
   }
 
-});
-
-document.getElementById("addFlowersBtn").addEventListener("click", () => {
-  const selected = looseFlowers.filter(p => flowerQuantities[p.id] > 0);
-  const feedback = document.getElementById("flowerFeedback");
-  if (!selected.length) {
-    feedback.textContent = "Vui lòng chọn ít nhất 1 bông hoa nhé!";
-    return;
-  }
-  let added = 0;
-  for (const p of selected) {
-    const available = Math.max(0, 99 - (cart[p.id] || 0));
-    const quantity = Math.min(available, flowerQuantities[p.id]);
-    if (quantity > 0) {
-      cart[p.id] = (cart[p.id] || 0) + quantity;
-      added += quantity;
-    }
-    flowerQuantities[p.id] = 0;
-  }
-  saveCart();
-  renderFlowerOptions();
-  render();
-  feedback.textContent = added ? `Đã thêm ${added} bông hoa vào giỏ hàng! 🌷` : "Mỗi loại hoa chỉ được chọn tối đa 99 bông.";
 });
 
 renderFlowerOptions();
