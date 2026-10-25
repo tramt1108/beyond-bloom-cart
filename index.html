@@ -190,6 +190,17 @@ a {
   color: var(--green);
 }
 
+.flower-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.flower-option { background: #fff; border: 1px solid #f2e7e3; border-radius: 14px; padding: 15px; }
+.flower-option strong { display: block; color: var(--green); margin-bottom: 7px; }
+.flower-option .controls { justify-content: space-between; margin-top: 10px; }
+.flower-option .controls span { font-weight: bold; }
+.flower-option .price { margin: 0; }
+.flower-option button { min-width: 42px; }
+.flower-add { margin-top: 15px; width: 100%; }
+@media(max-width: 520px) { .flower-grid { grid-template-columns: 1fr; } }
+button:disabled { opacity: .55; cursor: not-allowed; }
+
 footer {
   text-align: center;
   padding: 25px;
@@ -211,6 +222,14 @@ footer {
 <h2>🛒 Giỏ hàng của bạn <span id="count">(0)</span></h2>
 
 <div id="cart"></div>
+
+<section class="card" aria-labelledby="flowerTitle">
+  <h2 id="flowerTitle">🌸 Tự chọn từng bông hoa</h2>
+  <p>Chọn loại hoa và số lượng bạn thích, sau đó nhấn <strong>Thêm hoa vào giỏ</strong>.</p>
+  <div id="flowerOptions" class="flower-grid"></div>
+  <button type="button" class="primary flower-add" id="addFlowersBtn">🌷 Thêm hoa vào giỏ</button>
+  <p id="flowerFeedback" role="status" aria-live="polite"></p>
+</section>
 
 <p>
   <a href="https://beyondbloom7.wordpress.com/san-pham-dich-vu/">
@@ -298,8 +317,28 @@ const products = [
     name: "Hydrangea DIY",
     price: 359000,
     image: "hydrangea.jpg"
-  }
+  },
+  { id: "single-sunflower", name: "Hoa hướng dương (bông)", price: 20000, emoji: "🌻" },
+  { id: "single-rose", name: "Hoa hồng (bông)", price: 14000, emoji: "🌹" },
+  { id: "single-lily", name: "Hoa ly (bông)", price: 20000, emoji: "🌸" },
+  { id: "single-hydrangea", name: "Hoa cẩm tú cầu (bông)", price: 35000, emoji: "💐" }
 ];
+
+const looseFlowers = products.filter(p => p.id.startsWith("single-"));
+const flowerQuantities = Object.fromEntries(looseFlowers.map(p => [p.id, 0]));
+
+function renderFlowerOptions() {
+  document.getElementById("flowerOptions").innerHTML = looseFlowers.map(p => `
+    <div class="flower-option">
+      <strong>${p.emoji} ${p.name}</strong>
+      <div class="price">${money(p.price)} / bông</div>
+      <div class="controls">
+        <button type="button" class="qty" data-flower-dec="${p.id}" aria-label="Giảm ${p.name}">−</button>
+        <span>${flowerQuantities[p.id]}</span>
+        <button type="button" class="qty" data-flower-inc="${p.id}" aria-label="Tăng ${p.name}">+</button>
+      </div>
+    </div>`).join("");
+}
 
 const key = "beyondBloomCartV1";
 
@@ -386,7 +425,7 @@ function render() {
 
         <div class="product">
 
-          <img src="${p.image}" alt="${p.name}">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<div style="font-size:48px;width:100px;text-align:center" aria-hidden="true">${p.emoji}</div>`}
 
           <div class="info">
 
@@ -469,6 +508,31 @@ document.addEventListener("click", e => {
   }
 
 });
+
+document.getElementById("addFlowersBtn").addEventListener("click", () => {
+  const selected = looseFlowers.filter(p => flowerQuantities[p.id] > 0);
+  const feedback = document.getElementById("flowerFeedback");
+  if (!selected.length) {
+    feedback.textContent = "Vui lòng chọn ít nhất 1 bông hoa nhé!";
+    return;
+  }
+  let added = 0;
+  for (const p of selected) {
+    const available = Math.max(0, 99 - (cart[p.id] || 0));
+    const quantity = Math.min(available, flowerQuantities[p.id]);
+    if (quantity > 0) {
+      cart[p.id] = (cart[p.id] || 0) + quantity;
+      added += quantity;
+    }
+    flowerQuantities[p.id] = 0;
+  }
+  saveCart();
+  renderFlowerOptions();
+  render();
+  feedback.textContent = added ? `Đã thêm ${added} bông hoa vào giỏ hàng! 🌷` : "Mỗi loại hoa chỉ được chọn tối đa 99 bông.";
+});
+
+renderFlowerOptions();
 
 document.getElementById("checkoutBtn").addEventListener("click", () => {
 
